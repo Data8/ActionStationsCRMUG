@@ -1,0 +1,53 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css" integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M" crossorigin="anonymous">
+
+</head>
+<body>
+<div class="input-group">
+    <span class="input-group-addon">$</span>
+    <input type="text" placeholder="Credit Limit" class="form-control" id="creditlimit"/>
+    <span class="input-group-addon">.00</span>
+    <span class="input-group-btn">
+            <button class="btn btn-secondary" type="button" id="go">Go!</button>
+        </span>
+</div>
+
+<script type="text/javascript">
+    Xrm = window.parent.Xrm;
+
+    document.getElementById("go").addEventListener("click", function() {
+        var orgUrl = Xrm.Page.context.getClientUrl();
+        var webApi = orgUrl + "/api/data/v8.0/";
+        var accountId = Xrm.Page.data.entity.getId().substring(1, 37);
+        var url = webApi + "accounts(" + accountId + ")/Microsoft.Dynamics.CRM.new_ApplyCreditLimit";
+
+        var req = new XMLHttpRequest();
+        req.open("POST", url);
+        req.setRequestHeader("Accept", "application/json");
+        req.setRequestHeader("Content-Type", "application/json; charset=utf-8");
+        req.setRequestHeader("OData-MaxVersion", "4.0");
+        req.setRequestHeader("OData-Version", "4.0");
+        req.onreadystatechange = function() {
+            if (this.readyState === 4) {
+                req.onreadystatechange = null;
+                if (this.status === 204) {
+                    Xrm.Utility.alertDialog("Credit limit applied");
+                    Xrm.Page.data.refresh();
+                } else {
+                    var err = JSON.parse(this.response).error;
+                    Xrm.Utility.alertDialog(err.message);
+                }
+            }
+        };
+
+        var actionParams = { RequestedCreditLimit: parseInt(document.getElementById("creditlimit").value) };
+        req.send(window.JSON.stringify(actionParams));
+    });
+</script>
+</body>
+</html>
